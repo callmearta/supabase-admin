@@ -4,6 +4,7 @@ import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { databaseClient } from "@/utils/supabase/database";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -40,7 +41,7 @@ export const signInAction = async (formData: FormData) => {
   const password = formData.get("password") as string;
   const supabase = createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error, data } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -48,8 +49,18 @@ export const signInAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
-
-  return redirect("/protected");
+  const userInPublic = (await supabase.from('users').select('*').eq('id', `${data.user.id}`)).data;
+  if (!userInPublic?.length) {
+    await supabase.auth.signOut();
+    return encodedRedirect("error", "/sign-in", 'No user found');
+  }
+  const userRole = userInPublic[0].role;
+  const isAdmin = userRole == 'admin';
+  if (!isAdmin) {
+    await supabase.auth.signOut();
+    return encodedRedirect("error", "/sign-in", 'No user found');
+  }
+  return redirect("/dashboard");
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
@@ -128,3 +139,15 @@ export const signOutAction = async () => {
   await supabase.auth.signOut();
   return redirect("/sign-in");
 };
+export async function fetchTablesFromSupabase() {
+  const client = databaseClient();
+  await client.connect();
+  const res = await client.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public';
+    `)
+
+  await client.end()
+  return res.rows;
+}
