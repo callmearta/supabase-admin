@@ -20,7 +20,7 @@ export default async function DashboardLayout({ children }: PropsWithChildren) {
             </nav>
             <main className="p-5 flex flex-col">
                 <SidebarTrigger />
-                <div className="max-w-7xl flex mx-auto flex-col gap-12 items-start">{children}</div>
+                <div className="max-w-7xl flex mx-auto flex-col gap-12 w-full items-start">{children}</div>
             </main>
         </div>
     </SidebarProvider>

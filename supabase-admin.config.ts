@@ -1,6 +1,7 @@
 import { Paperclip, Truck, UserIcon } from "lucide-react";
+import { Config, OverrideType } from "./types/supabase-admin";
 
-export const SUPABASE_ADMIN_CONFIG = {
+export const SUPABASE_ADMIN_CONFIG: Config = {
   menu: {
     users: {
       icon: UserIcon,
@@ -19,6 +20,21 @@ export const SUPABASE_ADMIN_CONFIG = {
     },
     attachments_products: {
       hidden: true,
+    },
+  },
+  overrides: {
+    attachments: {
+      url: {
+        type: OverrideType.Upload,
+      },
+    },
+  },
+  relations: {
+    products: {
+      attachments: {
+        type: OverrideType.Upload,
+        tableName: "attachments_products",
+      },
     },
   },
 };

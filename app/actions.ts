@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import { headers as NextHeaders } from "next/headers";
 import { redirect } from "next/navigation";
 import { databaseClient } from "@/utils/supabase/database";
+import { Column } from "@/types/column";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -32,7 +33,7 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect(
       "success",
       "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
+      "Thanks for signing up! Please check your email for a verification link."
     );
   }
 };
@@ -50,16 +51,18 @@ export const signInAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
-  const userInPublic = (await supabase.from('users').select('*').eq('id', `${data.user.id}`)).data;
+  const userInPublic = (
+    await supabase.from("users").select("*").eq("id", `${data.user.id}`)
+  ).data;
   if (!userInPublic?.length) {
     await supabase.auth.signOut();
-    return encodedRedirect("error", "/sign-in", 'No user found');
+    return encodedRedirect("error", "/sign-in", "Invalid login credentials");
   }
   const userRole = userInPublic[0].role;
-  const isAdmin = userRole == 'admin';
+  const isAdmin = userRole == "admin";
   if (!isAdmin) {
     await supabase.auth.signOut();
-    return encodedRedirect("error", "/sign-in", 'No user found');
+    return encodedRedirect("error", "/sign-in", "Invalid login credentials");
   }
   return redirect("/dashboard");
 };
@@ -84,7 +87,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
     return encodedRedirect(
       "error",
       "/forgot-password",
-      "Could not reset password",
+      "Could not reset password"
     );
   }
 
@@ -95,7 +98,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   return encodedRedirect(
     "success",
     "/forgot-password",
-    "Check your email for a link to reset your password.",
+    "Check your email for a link to reset your password."
   );
 };
 
@@ -109,7 +112,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Password and confirm password are required",
+      "Password and confirm password are required"
     );
   }
 
@@ -117,7 +120,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Passwords do not match",
+      "Passwords do not match"
     );
   }
 
@@ -129,7 +132,7 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       "error",
       "/protected/reset-password",
-      "Password update failed",
+      "Password update failed"
     );
   }
 
@@ -142,7 +145,6 @@ export const signOutAction = async () => {
   return redirect("/sign-in");
 };
 
-
 export async function fetchTablesFromSupabase() {
   const client = databaseClient();
   await client.connect();
@@ -150,9 +152,9 @@ export async function fetchTablesFromSupabase() {
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public';
-    `)
+    `);
 
-  await client.end()
+  await client.end();
   return res.rows;
 }
 
@@ -183,13 +185,11 @@ export async function fetchColumnsForTable(tableName: string) {
       SELECT * FROM columns_with_enum;
     `);
   await client.end();
-  return res.rows as {
-    column_name: string,
-    ordinal_position: number,
-    column_default: null | 'now()' | number | string,
-    is_nullable: 'YES' | 'NO',
-    data_type: 'USER-DEFINED' | string,
-    udt_name: 'varchar' | 'text' | 'timestamptz' | 'uuid' | ''
-    enum_values: '{NULL}' | string
-  }[];
+  return res.rows as Column[];
+}
+
+export async function saveDataToSupabase(tableName: string, data: any) {
+  const supabase = await createClient();
+  const result = await supabase.from(tableName).insert(data);
+  return result;
 }
