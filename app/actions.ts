@@ -2,15 +2,16 @@
 
 import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
-import { headers } from "next/headers";
+import { headers as NextHeaders } from "next/headers";
 import { redirect } from "next/navigation";
 import { databaseClient } from "@/utils/supabase/database";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
-  const supabase = createClient();
-  const origin = headers().get("origin");
+  const supabase = await createClient();
+  const headers = await NextHeaders();
+  const origin = headers.get("origin");
 
   if (!email || !password) {
     return { error: "Email and password are required" };
@@ -39,7 +40,7 @@ export const signUpAction = async (formData: FormData) => {
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { error, data } = await supabase.auth.signInWithPassword({
     email,
@@ -65,8 +66,9 @@ export const signInAction = async (formData: FormData) => {
 
 export const forgotPasswordAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
-  const supabase = createClient();
-  const origin = headers().get("origin");
+  const supabase = await createClient();
+  const headers = await NextHeaders();
+  const origin = headers.get("origin");
   const callbackUrl = formData.get("callbackUrl")?.toString();
 
   if (!email) {
@@ -98,7 +100,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
 };
 
 export const resetPasswordAction = async (formData: FormData) => {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
@@ -135,10 +137,12 @@ export const resetPasswordAction = async (formData: FormData) => {
 };
 
 export const signOutAction = async () => {
-  const supabase = createClient();
+  const supabase = await createClient();
   await supabase.auth.signOut();
   return redirect("/sign-in");
 };
+
+
 export async function fetchTablesFromSupabase() {
   const client = databaseClient();
   await client.connect();
@@ -150,4 +154,42 @@ export async function fetchTablesFromSupabase() {
 
   await client.end()
   return res.rows;
+}
+
+export async function fetchColumnsForTable(tableName: string) {
+  const client = databaseClient();
+  await client.connect();
+  const res = await client.query(`
+     WITH enum_values AS (
+        SELECT t.typname AS enum_type, e.enumlabel AS enum_value
+        FROM pg_type t
+        JOIN pg_enum e ON t.oid = e.enumtypid
+      ),
+      columns_with_enum AS (
+        SELECT 
+          c.column_name, 
+          c.ordinal_position, 
+          c.column_default, 
+          c.is_nullable, 
+          c.data_type, 
+          c.udt_name,
+          array_to_string(array_agg(e.enum_value), ',') AS enum_values -- Converts array to comma-separated string
+        FROM information_schema.columns c
+        LEFT JOIN enum_values e ON c.udt_name = e.enum_type
+        WHERE c.table_schema = 'public'
+        AND c.table_name = '${tableName}'
+        GROUP BY c.column_name, c.ordinal_position, c.column_default, c.is_nullable, c.data_type, c.udt_name
+      )
+      SELECT * FROM columns_with_enum;
+    `);
+  await client.end();
+  return res.rows as {
+    column_name: string,
+    ordinal_position: number,
+    column_default: null | 'now()' | number | string,
+    is_nullable: 'YES' | 'NO',
+    data_type: 'USER-DEFINED' | string,
+    udt_name: 'varchar' | 'text' | 'timestamptz' | 'uuid' | ''
+    enum_values: '{NULL}' | string
+  }[];
 }

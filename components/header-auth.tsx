@@ -9,7 +9,7 @@ import { ThemeSwitcher } from "./theme-switcher";
 export default async function AuthButton() {
   const {
     data: { user },
-  } = await createClient().auth.getUser();
+  } = await (await createClient()).auth.getUser();
 
  
   return user ? (

@@ -1,3 +1,4 @@
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -6,26 +7,35 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/server";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, PlusIcon } from "lucide-react";
+import Link from "next/link";
 
 export default async function Page({
-  params: { table },
+  params,
 }: {
-  params: { table: string };
+  params: Promise<{ table: string }>;
 }) {
-  const supabase = createClient();
+  const { table } = await params;
+  const supabase = await createClient();
   const { data, error, count } = await supabase.from(table).select("*");
   if (error) {
     return <p>{error.message}</p>;
   }
-  if (!data) {
+  if (!data || !data.length) {
     return <p>No data found.</p>;
   }
 
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
-      <h1 className="font-bold text-2xl capitalize">{table}</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="font-bold text-2xl capitalize">{table}</h1>
+        <Link href={`/dashboard/${table}/create`} className={cn(buttonVariants({ variant: "outline" }))}>
+          <PlusIcon size={14} className="mr-1" />
+          <span>Create</span>
+        </Link>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>

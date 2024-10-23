@@ -83,13 +83,13 @@ export function DashboardSidebar({
       icon:
         t.table_name in SUPABASE_ADMIN_CONFIG.menu
           ? //@ts-ignore
-            SUPABASE_ADMIN_CONFIG.menu[t.table_name].icon
+          SUPABASE_ADMIN_CONFIG.menu[t.table_name].icon
           : Bot,
       isActive: false,
       items: [
         {
           title: "List",
-          url: t.table_name,
+          url: '/dashboard/' + t.table_name,
           icon: Bot,
         },
       ],
