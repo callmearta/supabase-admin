@@ -169,6 +169,7 @@ export async function fetchColumnsForTable(tableName: string) {
       ),
       columns_with_enum AS (
         SELECT 
+          c.is_identity,
           c.column_name, 
           c.ordinal_position, 
           c.column_default, 
@@ -180,7 +181,7 @@ export async function fetchColumnsForTable(tableName: string) {
         LEFT JOIN enum_values e ON c.udt_name = e.enum_type
         WHERE c.table_schema = 'public'
         AND c.table_name = '${tableName}'
-        GROUP BY c.column_name, c.ordinal_position, c.column_default, c.is_nullable, c.data_type, c.udt_name
+        GROUP BY c.is_identity, c.column_name, c.ordinal_position, c.column_default, c.is_nullable, c.data_type, c.udt_name
       )
       SELECT * FROM columns_with_enum;
     `);
@@ -188,8 +189,16 @@ export async function fetchColumnsForTable(tableName: string) {
   return res.rows as Column[];
 }
 
-export async function saveDataToSupabase(tableName: string, data: any) {
+export async function saveDataToSupabase(tableName: string, data: FormData) {
   const supabase = await createClient();
-  const result = await supabase.from(tableName).insert(data);
+  const result = await supabase.from(tableName).insert(Object.fromEntries(data));
+  return result;
+}
+
+export async function uploadFileToSupabase(bucketId: string, file: File) {
+  const supabase = await createClient();
+  const result = await supabase.storage
+    .from(bucketId)
+    .upload(file.name.replace(/s/g,'-'), file);
   return result;
 }

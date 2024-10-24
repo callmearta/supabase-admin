@@ -58,9 +58,9 @@ export default async function Page(props: {
         return (
           <Input
             type="text"
-            placeholder="Auto Generated UUID"
-            readOnly
-            disabled
+            placeholder={column.is_identity == "YES" ? "Auto Generated" : ""}
+            readOnly={column.is_identity == "YES"}
+            disabled={column.is_identity == "YES"}
           />
         );
         break;

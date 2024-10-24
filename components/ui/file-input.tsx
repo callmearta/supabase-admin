@@ -1,7 +1,9 @@
 "use client";
 
-import { ChangeEvent, HTMLAttributes, useState } from "react";
+import { ChangeEvent, HTMLAttributes, useRef, useState } from "react";
 import { Input } from "./input";
+import { createClient } from "@/utils/supabase/client";
+import { uploadFileToSupabase } from "@/app/actions";
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
@@ -13,9 +15,12 @@ export default function FileInput({
 }: InputProps & {
   onChange?: (files: File[]) => void;
 }) {
+  const hiddenRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [previews, setPreviews] = useState<string[]>([]);
-  const _handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const _handleChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!hiddenRef.current) return;
     if (multiple) {
       _handleMultiple(e);
       return;
@@ -27,17 +32,26 @@ export default function FileInput({
     if (typeof onChange != "undefined") onChange([newFile]);
     const url = URL.createObjectURL(newFile);
     setPreviews([url]);
+    const result = await uploadFileToSupabase("uploads", newFile);
+    console.log(result);
+    if (result.data) {
+      hiddenRef.current.value = result.data?.fullPath;
+    }
   };
   const _handleMultiple = (e: ChangeEvent<HTMLInputElement>) => {
+    setIsLoading(true);
     const newFiles = e.target.files;
     if (!newFiles || !newFiles.length) return;
     const newFilesArr = Array.from(newFiles);
     setFiles([...files, ...newFilesArr]);
     if (typeof onChange != "undefined") onChange([...files, ...newFilesArr]);
-    Array.from(newFiles).forEach((file) => {
+    Array.from(newFiles).forEach(async (file) => {
       const url = URL.createObjectURL(file);
       setPreviews((prev) => [...prev, url]);
+      const result = await uploadFileToSupabase("uploads", file);
+      console.log(result);
     });
+    setIsLoading(false);
   };
   return (
     <div className="w-full">
@@ -51,7 +65,14 @@ export default function FileInput({
           </div>
         ))}
       </div>
-      <Input {...rest} type="file" onChange={_handleChange} />
+      <Input
+        {...rest}
+        name={undefined}
+        disabled={isLoading}
+        type="file"
+        onChange={_handleChange}
+      />
+      <input ref={hiddenRef} name={rest.name} type="hidden" />
     </div>
   );
 }

@@ -5,15 +5,26 @@ import { Button } from "./button";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { cn } from "@/lib/utils";
 import { Calendar } from "./calendar";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { format } from "date-fns";
 import { Column } from "@/types/column";
 
 export default function DatePicker({ column }: { column: Column }) {
   const [date, setDate] = useState<Date>();
+  const hiddenRef = useRef<HTMLInputElement>(null);
+  const _handleSelect = (date?: Date) => {
+    if (!hiddenRef.current || !date) return;
+    setDate(date);
+    hiddenRef.current.value = date.toISOString();
+  };
   return (
     <>
-      <input type="hidden" readOnly required={column.is_nullable == 'NO'} name={column.column_name} value={date?.valueOf()} />
+      <input
+        type="hidden"
+        required={column.is_nullable == "NO"}
+        name={column.column_name}
+        ref={hiddenRef}
+      />
       <Popover>
         <PopoverTrigger asChild>
           <Button
@@ -31,7 +42,7 @@ export default function DatePicker({ column }: { column: Column }) {
           <Calendar
             mode="single"
             selected={date}
-            onSelect={setDate}
+            onSelect={_handleSelect}
             initialFocus
           />
         </PopoverContent>

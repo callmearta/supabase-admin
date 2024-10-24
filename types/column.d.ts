@@ -1,4 +1,5 @@
 export type Column = {
+  is_identity: 'YES' | 'NO';
   column_name: string;
   ordinal_position: number;
   column_default: null | "now()" | number | string;

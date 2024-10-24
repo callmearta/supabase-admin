@@ -1,14 +1,9 @@
 "use client";
 import { saveDataToSupabase } from "@/app/actions";
 import { Button } from "@/components/ui/button";
+import { toast } from "@hooks/use-toast";
 import { CheckIcon, RotateCwIcon } from "lucide-react";
-import {
-  FormEventHandler,
-  PropsWithChildren,
-  use,
-  useRef,
-  useState,
-} from "react";
+import { FormEventHandler, PropsWithChildren, useRef, useState } from "react";
 
 export default function Form({
   table,
@@ -23,7 +18,16 @@ export default function Form({
     const formData = new FormData(formRef.current);
     // formData.values().forEach((v) => console.log(v));
     const result = await saveDataToSupabase(table, formData);
-    console.log(result);
+    
+    if (result.error) {
+      toast({ title: result.error.message });
+    }
+    if (result.status == 201) {
+      toast({
+        title: "Saved successfully",
+        description: "Your data has been saved successfully.",
+      });
+    }
     setIsLoading(false);
   };
   return (
