@@ -1,67 +1,46 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+<h1 align="center">Supabase Admin Dashboard</h1>
 
 <p align="center">
- The fastest way to build apps with Next.js and Supabase
+ Fastest way to build an admin panel for using Supabase.
 </p>
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
 <br/>
 
-## Features
+> **WARNING**  
+> This repository is still under development. While feedbacks and pull requests are appreciated, There's no guarantee to use this in production.
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+# Important note for using
+<p>Right now detecting if a user is an admin indeed is just hardcoded. For now you need to have a `users` table in your public schema with a column named `role` with the value of `admin` for an admin user. While you can customize this logic, There isn't any support right now for admin detection condition. So feel free to either try to edit the code, or make custom logic handlers and open a PR. I'd really appreciate it.</p>
 
-## Demo
+## Doesn't Supabase's own dashboard cover all needs?
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+<p>While Supabase's own dashboard covers exactly everything you need, The user experience is not that great for handing off a project to a client. This is a challenge I was facing while trying to develop multiple projects using Supabase. So I decided to create a generic admin panel.</p>
 
-## Deploy to Vercel
+## Why and how it works?
+<p>The main thing while creating a generic admin panel in mind, is to be able to do everything with the least effort. Here's what happens when you try to use this admin panel:</p>
 
-Vercel deployment will guide you through creating a Supabase account and project.
+1. You enter your PostgreSql connection string that you can copy from Supabase dashboard
+2. At runtime Nextjs makes a request to that database fetching the 'public' schema to display sidebar menu
+3. When navigating to a table, Nextjs would use that table name from the url to fetch columns for that table in order to display a table in the list page while allowing you to overwrite things.
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+<p>That's the basic structure of how Supabase Admin works. Now it's still under development but the goal to achieve is a customizable admin panel that can be done withing 5 minutes just by overwriting a config file.</p>
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+## Clone and run
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
-
-## Clone and run locally
-
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
-
-2. Create a Next.js app using the Supabase Starter template npx command
+1. Clone the project
 
    ```bash
-   npx create-next-app -e with-supabase
+   git clone https://github.com/callmearta/supabase-admin
+   cd supabase-admin
    ```
 
-3. Use `cd` to change into the app's directory
+2. Install dependencies
 
    ```bash
-   cd name-of-new-app
+   npm i
+   # OR
+   bun i
    ```
 
 4. Rename `.env.example` to `.env.local` and update the following:
@@ -69,9 +48,8 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
    ```
    NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
    NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
+   DB_CONNECTION_STRING=[INSERT SUPABASE DATABASE CONNECTION STRING]
    ```
-
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
 
 5. You can now run the Next.js local development server:
 
@@ -79,18 +57,26 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
    npm run dev
    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+   The admin panel should now be running on [localhost:3000](http://localhost:3000/).
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+## License
+This software is open for personal, educational, or non-commercial use, modification, and distribution. Contributions to the project are welcome, subject to the terms outlined below.
+<br/>
+## Terms and Conditions
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+### 1. Usage and Contribution:
 
-## Feedback and issues
+You may use, copy, and modify this software freely, as long as it is not for commercial purposes.
+Contributions to this project are encouraged, and all contributions are licensed under these terms.
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+### 2. Non-Commercial Use Only:
 
-## More Supabase examples
+Any commercial use, defined as usage intended to generate revenue, or used by any business or organization with more than 10 employees, is strictly prohibited without express written permission from the author.
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+### 3. Attribution:
+
+Proper attribution must be given to the original author(s) in any copies or substantial portions of the software.
+
+### 4. No Warranty:
+
+This software is provided "as is," without warranty of any kind, express or implied.
