@@ -10,7 +10,7 @@
 > This repository is still under development. While feedbacks and pull requests are appreciated, There's no guarantee to use this in production.
 
 # Important note for using
-<p>Right now detecting if a user is an admin indeed is just hardcoded. For now you need to have a `users` table in your public schema with a column named `role` with the value of `admin` for an admin user. While you can customize this logic, There isn't any support right now for admin detection condition. So feel free to either try to edit the code, or make custom logic handlers and open a PR. I'd really appreciate it.</p>
+Right now detecting if a user is an admin indeed is just hardcoded. For now you need to have a `users` table in your public schema with a column named `role` with the value of `admin` for an admin user. While you can customize this logic, There isn't any support right now for admin detection condition. So feel free to either try to edit the code, or make custom logic handlers and open a PR. I'd really appreciate it.
 
 ## Doesn't Supabase's own dashboard cover all needs?
 
