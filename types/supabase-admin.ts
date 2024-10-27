@@ -1,5 +1,6 @@
 export enum OverrideType {
-  Upload = "upload",
+  UploadSingle = "uploadsingle",
+  UploadMultiple = "uploadmultiple",
   Select = "select",
   Date = "date",
   Text = "text",
@@ -8,7 +9,7 @@ export enum OverrideType {
 }
 
 export type Config = {
-  menu: {
+  menu?: {
     [key: string]: {
       icon?: any;
       displayName?: string;
@@ -16,23 +17,37 @@ export type Config = {
       hidden?: boolean;
     };
   };
-  overrides: {
-    [key: string]: {
-      [key: string]: {
+  overrides?: {
+    [tableName: string]: {
+      [columnName: string]: {
         type: OverrideType;
-        tableName?: string;
-        values?: string[];
       };
     };
   };
-  relations: {
-    [key: string]: {
-      [key: string]: {
-        displayName?: string;
-        type: OverrideType;
-        tableName?: string;
-        columnName?: string;
-      };
-    };
-  };
+  pivotFields?: {
+    [tableName: string]: {
+      [fieldName: string]: PivotField
+    }
+  }
 };
+
+export type PivotField = {
+  type: OverrideType,
+  pivotTable: {
+    tableName: string,
+    foreignKeys: {
+      fillableColumn: string,
+      relationalColumn: string
+    }
+  },
+  storeIn: {
+    tableName: string,
+    fieldName: string
+  },
+  nullable?: boolean,
+  bucketName?: string,
+  placeholder?: string,
+  readOnly?: boolean,
+  defaultValue?: any,
+  disabled?: boolean,
+}

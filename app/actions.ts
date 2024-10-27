@@ -6,6 +6,8 @@ import { headers as NextHeaders } from "next/headers";
 import { redirect } from "next/navigation";
 import { databaseClient } from "@/utils/supabase/database";
 import { Column } from "@/types/column";
+import { SUPABASE_ADMIN_CONFIG } from "@/supabase-admin.config";
+import { OverrideType, PivotField } from "@/types/supabase-admin";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -190,8 +192,58 @@ export async function fetchColumnsForTable(tableName: string) {
 }
 
 export async function saveDataToSupabase(tableName: string, data: FormData) {
+  const pivotFields = SUPABASE_ADMIN_CONFIG.pivotFields ? SUPABASE_ADMIN_CONFIG.pivotFields[tableName] as { [key: string]: PivotField } : null;
+  if (pivotFields) {
+    const result = await savePivotDataToSupabase({
+      pivotFields,
+      formData: data,
+      tableName,
+    })
+    return result;
+  }
   const supabase = await createClient();
   const result = await supabase.from(tableName).insert(Object.fromEntries(data));
+
+  return result;
+}
+
+async function savePivotDataToSupabase({
+  pivotFields,
+  formData,
+  tableName
+}: {
+  pivotFields: { [key: string]: PivotField },
+  formData: FormData,
+  tableName: string,
+}) {
+  const supabase = await createClient();
+  const pivotFieldNames = Object.keys(pivotFields);
+  pivotFieldNames.forEach(async key => {
+    formData.delete(key);
+  });
+  const result = await supabase.from(tableName).upsert(Object.fromEntries(formData)).select();
+  if (!result.data) {
+    throw new Error("Failed to insert into Supabase");
+  }
+  pivotFieldNames.forEach(async key => {
+    const pivotObject = pivotFields[key];
+    let fileUrl;
+    if (pivotObject.type == OverrideType.UploadMultiple || pivotObject.type == OverrideType.UploadSingle) {
+      if (!pivotObject.bucketName) return;
+      fileUrl = await supabase.storage.from(pivotObject.bucketName).upload((formData.get(key) as File).name.replace(/s/g, '-'), formData.get(key) as File);
+      if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
+      const insertedFile = await supabase.from(pivotObject.storeIn.tableName).upsert({
+        [pivotObject.storeIn.fieldName]: fileUrl.data?.fullPath
+      }).select();
+      if (!insertedFile.data) throw new Error(`Failed to insert into pivot object table: storeIn ${pivotObject.storeIn.tableName}`);
+      await supabase.from(pivotObject.pivotTable.tableName).insert({
+        [pivotObject.pivotTable.foreignKeys.fillableColumn]: insertedFile.data[0].id,
+        [pivotObject.pivotTable.foreignKeys.relationalColumn]: result.data[0].id
+      });
+
+      return;
+    }
+  });
   return result;
 }
 
@@ -199,6 +251,6 @@ export async function uploadFileToSupabase(bucketId: string, file: File) {
   const supabase = await createClient();
   const result = await supabase.storage
     .from(bucketId)
-    .upload(file.name.replace(/s/g,'-'), file);
+    .upload(file.name.replace(/s/g, '-'), file);
   return result;
 }

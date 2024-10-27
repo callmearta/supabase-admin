@@ -25,16 +25,27 @@ export const SUPABASE_ADMIN_CONFIG: Config = {
   overrides: {
     attachments: {
       url: {
-        type: OverrideType.Upload,
+        type: OverrideType.UploadSingle,
       },
     },
   },
-  relations: {
+  pivotFields: {
     products: {
-      attachments: {
-        type: OverrideType.Upload,
-        tableName: "attachments_products",
-      },
-    },
-  },
+      coverImage: {
+        type: OverrideType.UploadSingle,
+        bucketName: "uploads",
+        pivotTable: {
+          tableName: "attachments_products",
+          foreignKeys: {
+            fillableColumn: 'attachment_id',
+            relationalColumn: 'product_id'
+          }
+        },
+        storeIn:{
+          tableName: 'attachments',
+          fieldName: 'url'
+        }
+      }
+    }
+  }
 };

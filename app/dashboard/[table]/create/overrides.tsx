@@ -16,7 +16,7 @@ import { OverrideType } from "@/types/supabase-admin";
 export default function Overrides(tableName: string, column: Column) {
   //@ts-ignore
   const override =
-    SUPABASE_ADMIN_CONFIG.overrides[tableName][column.column_name];
+    SUPABASE_ADMIN_CONFIG.overrides && SUPABASE_ADMIN_CONFIG.overrides[tableName][column.column_name];
   if (!override) {
     console.error("No override found for column", column.column_name);
     return null;
@@ -51,8 +51,11 @@ export default function Overrides(tableName: string, column: Column) {
         </Select>
       );
       break;
-    case OverrideType.Upload:
+    case OverrideType.UploadSingle:
       return <FileInput name={column.column_name} accept="image/*" />;
+      break;
+    case OverrideType.UploadMultiple:
+      return <FileInput multiple={true} name={column.column_name} accept="image/*" />;
       break;
     case OverrideType.Number:
       return <Input name={column.column_name} type="number" />;

@@ -9,7 +9,7 @@ import { useRef, useState } from "react";
 import { format } from "date-fns";
 import { Column } from "@/types/column";
 
-export default function DatePicker({ column }: { column: Column }) {
+export default function DatePicker({ column, name, required }: { column?: Column, name?: string, required?: boolean }) {
   const [date, setDate] = useState<Date>();
   const hiddenRef = useRef<HTMLInputElement>(null);
   const _handleSelect = (date?: Date) => {
@@ -21,8 +21,8 @@ export default function DatePicker({ column }: { column: Column }) {
     <>
       <input
         type="hidden"
-        required={column.is_nullable == "NO"}
-        name={column.column_name}
+        required={typeof required != 'undefined' ? required : column?.is_nullable == "NO"}
+        name={name ? name : column?.column_name}
         ref={hiddenRef}
       />
       <Popover>
