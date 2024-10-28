@@ -218,31 +218,40 @@ async function savePivotDataToSupabase({
 }) {
   const supabase = await createClient();
   const pivotFieldNames = Object.keys(pivotFields);
+  const copyFormData = new FormData();
+  for (const [key, value] of Array.from(formData.entries())) {
+    copyFormData.append(key, value);
+  }
   pivotFieldNames.forEach(async key => {
-    formData.delete(key);
+    copyFormData.delete(key);
   });
-  const result = await supabase.from(tableName).upsert(Object.fromEntries(formData)).select();
-  console.log(result)
+  const result = await supabase.from(tableName).upsert(Object.fromEntries(copyFormData)).select();
+  
   if (!result.data) {
     throw new Error("Failed to insert into Supabase");
   }
   pivotFieldNames.forEach(async key => {
     const pivotObject = pivotFields[key];
     let fileUrl;
+    
     if (pivotObject.type == OverrideType.UploadMultiple || pivotObject.type == OverrideType.UploadSingle) {
       if (!pivotObject.bucketName) return;
-      fileUrl = await supabase.storage.from(pivotObject.bucketName).upload((formData.get(key) as File).name.replace(/s/g, '-'), formData.get(key) as File);
+    
+      fileUrl = await supabase.storage.from(pivotObject.bucketName).upload("" + Math.floor(Date.now() / 1000) + (formData.get(key) as File).name.replace(/s/g, '-'), formData.get(key) as File);
+    
       if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
       const insertedFile = await supabase.from(pivotObject.storeIn.tableName).upsert({
         [pivotObject.storeIn.fieldName]: fileUrl.data?.fullPath
       }).select();
       if (!insertedFile.data) throw new Error(`Failed to insert into pivot object table: storeIn ${pivotObject.storeIn.tableName}`);
-      await supabase.from(pivotObject.pivotTable.tableName).insert({
+
+      const pivotInsertResult = await supabase.from(pivotObject.pivotTable.tableName).insert({
         [pivotObject.pivotTable.foreignKeys.fillableColumn]: insertedFile.data[0].id,
         [pivotObject.pivotTable.foreignKeys.relationalColumn]: result.data[0].id
       });
-
-      return;
+    
+      if (pivotInsertResult.error) throw new Error("failed to insert into pivot table itself", pivotInsertResult.error);
+      return {error:null, data: null, status: 201, statusText: 'Created'};
     }
   });
   return result;

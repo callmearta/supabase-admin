@@ -31,7 +31,7 @@ export default function Form({
     setIsLoading(false);
   };
   return (
-    <form ref={formRef} onSubmit={_handleSubmit}>
+    <form ref={formRef} onSubmit={_handleSubmit} encType="multipart/form-data">
       {children}
       <div className="flex justify-end mt-16 pt-4 border-t border-t-border">
         <Button disabled={isLoading} variant={"default"}>

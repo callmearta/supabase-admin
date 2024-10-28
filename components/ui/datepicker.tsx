@@ -24,6 +24,7 @@ export default function DatePicker({ column, name, required }: { column?: Column
         required={typeof required != 'undefined' ? required : column?.is_nullable == "NO"}
         name={name ? name : column?.column_name}
         ref={hiddenRef}
+        disabled={!date}
       />
       <Popover>
         <PopoverTrigger asChild>

@@ -6,14 +6,16 @@ import { createClient } from "@/utils/supabase/client";
 import { uploadFileToSupabase } from "@/app/actions";
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+  extends React.InputHTMLAttributes<HTMLInputElement> { }
 
 export default function FileInput({
   onChange,
   multiple,
+  disableAutoUpload,
   ...rest
 }: InputProps & {
   onChange?: (files: File[]) => void;
+  disableAutoUpload?: boolean
 }) {
   const hiddenRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
@@ -32,8 +34,8 @@ export default function FileInput({
     if (typeof onChange != "undefined") onChange([newFile]);
     const url = URL.createObjectURL(newFile);
     setPreviews([url]);
+    if (disableAutoUpload) return;
     const result = await uploadFileToSupabase("uploads", newFile);
-    console.log(result);
     if (result.data) {
       hiddenRef.current.value = result.data?.fullPath;
     }
@@ -48,6 +50,7 @@ export default function FileInput({
     Array.from(newFiles).forEach(async (file) => {
       const url = URL.createObjectURL(file);
       setPreviews((prev) => [...prev, url]);
+      if (disableAutoUpload) return;
       const result = await uploadFileToSupabase("uploads", file);
       console.log(result);
     });
@@ -67,12 +70,12 @@ export default function FileInput({
       </div>
       <Input
         {...rest}
-        name={undefined}
         disabled={isLoading}
         type="file"
         onChange={_handleChange}
+        name={disableAutoUpload ? rest.name : undefined}
       />
-      <input ref={hiddenRef} name={rest.name} type="hidden" />
+      <input ref={hiddenRef} name={!disableAutoUpload ? rest.name : undefined} type="hidden" />
     </div>
   );
 }

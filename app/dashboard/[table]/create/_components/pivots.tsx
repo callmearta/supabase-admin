@@ -22,10 +22,10 @@ export default function Pivots({ table }: { table: string }) {
                 return <DatePicker name={fieldName} />;
                 break;
             case OverrideType.UploadSingle:
-                return <FileInput name={fieldName} accept="image/*" />;
+                return <FileInput disableAutoUpload name={fieldName} accept="image/*" />;
                 break;
             case OverrideType.UploadMultiple:
-                return <FileInput multiple={true} name={fieldName} accept="image/*" />;
+                return <FileInput disableAutoUpload multiple={true} name={fieldName} accept="image/*" />;
                 break;
             case OverrideType.Number:
                 return <Input name={fieldName} type="number" />;
