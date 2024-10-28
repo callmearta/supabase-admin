@@ -1,7 +1,12 @@
-import { Paperclip, Truck, UserIcon } from "lucide-react";
+import { Command, Paperclip, Truck, UserIcon } from "lucide-react";
 import { Config, OverrideType } from "./types/supabase-admin";
 
 export const SUPABASE_ADMIN_CONFIG: Config = {
+  general:{
+    panelTitle: "Mock",
+    panelSubtitle:"This is mock data",
+    icon: Command
+  },
   menu: {
     users: {
       icon: UserIcon,

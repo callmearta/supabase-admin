@@ -222,6 +222,7 @@ async function savePivotDataToSupabase({
     formData.delete(key);
   });
   const result = await supabase.from(tableName).upsert(Object.fromEntries(formData)).select();
+  console.log(result)
   if (!result.data) {
     throw new Error("Failed to insert into Supabase");
   }

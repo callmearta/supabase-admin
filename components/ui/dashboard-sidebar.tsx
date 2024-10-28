@@ -81,7 +81,7 @@ export function DashboardSidebar({
       title: t.table_name,
       url: t.table_name,
       icon:
-        t.table_name in SUPABASE_ADMIN_CONFIG.menu
+        SUPABASE_ADMIN_CONFIG.menu && t.table_name in SUPABASE_ADMIN_CONFIG.menu
           ? //@ts-ignore
           SUPABASE_ADMIN_CONFIG.menu[t.table_name].icon
           : Bot,
@@ -104,7 +104,7 @@ export function DashboardSidebar({
         <NavMain items={dbItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

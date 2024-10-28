@@ -9,6 +9,11 @@ export enum OverrideType {
 }
 
 export type Config = {
+  general: {
+    panelTitle: string,
+    panelSubtitle: string,
+    icon: any
+  },
   menu?: {
     [key: string]: {
       icon?: any;

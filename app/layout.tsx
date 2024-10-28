@@ -1,16 +1,16 @@
 import { GeistSans } from "geist/font/sans";
 import { ThemeProvider } from "next-themes";
-import Link from "next/link";
 import "./globals.css";
+import { SUPABASE_ADMIN_CONFIG } from "@/supabase-admin.config";
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+const defaultUrl = process.env.PANEL_URL
+  ? `https://${process.env.PANEL_URL}`
   : "http://localhost:3000";
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
+  title: SUPABASE_ADMIN_CONFIG.general.panelTitle + ' - ' + SUPABASE_ADMIN_CONFIG.general.panelSubtitle,
+  description: SUPABASE_ADMIN_CONFIG.general.panelSubtitle,
 };
 
 export default function RootLayout({
