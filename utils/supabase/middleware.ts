@@ -1,3 +1,4 @@
+import { SUPABASE_ADMIN_CONFIG } from "@/supabase-admin.config";
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -38,9 +39,9 @@ export const updateSession = async (request: NextRequest) => {
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
     const user = await supabase.auth.getUser();
-    const userInPublic = (await supabase.from('users').select('role').limit(1).eq('id',user.data.user?.id)).data;
-    const hasAccess = userInPublic?.length && !user.error && userInPublic[0].role == 'admin';
-    if((userInPublic && userInPublic.length && userInPublic[0].role !='admin') || (!userInPublic && user)){
+    
+    const hasAccess = typeof SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback == 'function' ? SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback(user.data.user, supabase) : false;
+    if(!user || (!hasAccess && user)){
       await supabase.auth.signOut();
     }
 

@@ -25,6 +25,99 @@ Right now detecting if a user is an admin indeed is just hardcoded. For now you 
 
 <p>That's the basic structure of how Supabase Admin works. Now it's still under development but the goal to achieve is a customizable admin panel that can be done withing 5 minutes just by overwriting a config file.</p>
 
+# Supabase Admin Configuration
+
+This configuration file sets up an administrative interface for a Supabase-powered application. It defines authentication, layout, navigation, and field handling for the admin panel.
+
+## Configuration Sections
+
+### Authentication
+Defines authentication logic to verify admin access. Callback function is passed the user and supabase instance.
+
+```typescript
+auth: {
+   isAdminCallback: async (user, supabase) => {
+      // Check if user is admin
+   }
+}
+```
+
+
+### General Settings
+Basic panel configuration including title, subtitle, main icon, and pagination settings.
+
+```typescript
+general: {
+   panelTitle: "YOUR PANEL TITLE",
+   panelSubtitle: "YOUR PANEL SUBTITLE",
+   icon: Command, // An icon from Lucide React
+   itemsPerPage: 50
+}
+```
+
+### Navigation Menu
+Configures the sidebar navigation. Fetches all tables from the schema and auto generates a sidebar. This config is for changing how they display.
+
+Each menu item can be configured with:
+- `icon`: The icon to display
+- `displayName`: Label shown in the menu
+- `url`: Navigation path
+- `hidden`: Optional flag to hide menu items
+```typescript
+{
+   users: {
+      icon: UserIcon,
+      displayName: "Users",
+      url: "/dashbaord/users"
+   },
+   users_products: {
+      hidden: true
+   }
+}
+```
+
+### Field Overrides
+Specifies special handling for specific fields. In this case, the `url` field in `attachments` is configured as a single file upload.
+
+```typescript
+overrides: {
+   attachments: {
+      url: {
+         type: OverrideType.UploadSingle
+      }
+   }
+}
+```
+
+### Pivot Fields
+Handles many-to-many relationships with file uploads. Example:
+- Configures product cover images
+- Uses `attachments_products` as pivot table
+- Stores files in the "uploads" bucket
+- Maps relationships between products and attachments
+```typescript
+pivotFields: {
+   products: {
+      coverImage: {
+        type: OverrideType.UploadSingle,
+        bucketName: "uploads",
+        pivotTable: {
+          tableName: "attachments_products",
+          foreignKeys: {
+            fillableColumn: 'attachment_id',
+            relationalColumn: 'product_id'
+          }
+        },
+        storeIn:{
+          tableName: 'attachments',
+          fieldName: 'url'
+        }
+      }
+    }
+}
+```
+
+
 
 ## Clone and run
 

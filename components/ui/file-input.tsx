@@ -58,7 +58,7 @@ export default function FileInput({
   };
   return (
     <div className="w-full">
-      <div className="w-full flex gap-2 flex-wrap border mb-4 p-4 rounded-2xl">
+      {!!previews.length && <div className="w-full flex gap-2 flex-wrap border mb-4 p-4 rounded-2xl">
         {previews.map((preview) => (
           <div
             key={preview}
@@ -67,7 +67,7 @@ export default function FileInput({
             <img src={preview} className="w-full h-full object-cover" />
           </div>
         ))}
-      </div>
+      </div>}
       <Input
         {...rest}
         disabled={isLoading}

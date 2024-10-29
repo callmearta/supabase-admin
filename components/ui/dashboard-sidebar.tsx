@@ -9,6 +9,7 @@ import {
   GalleryVerticalEnd,
   Map,
   PieChart,
+  Plus,
   Settings2,
   SquareTerminal,
 } from "lucide-react";
@@ -91,6 +92,11 @@ export function DashboardSidebar({
           title: "List",
           url: '/dashboard/' + t.table_name,
           icon: Bot,
+        },
+        {
+          title: "Create",
+          url: '/dashboard/' + t.table_name + '/create',
+          icon: Plus,
         },
       ],
     }));

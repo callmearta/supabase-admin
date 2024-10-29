@@ -23,9 +23,6 @@ export default async function Page({
   if (error) {
     return <p>{error.message}</p>;
   }
-  if (!data || !data.length) {
-    return <p>No data found.</p>;
-  }
 
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
@@ -36,7 +33,7 @@ export default async function Page({
           <span>Create</span>
         </Link>
       </div>
-      <Table>
+      {!data || !data.length ? <p>No data found.</p> : <Table>
         <TableHeader>
           <TableRow>
             {Object.keys(data[0]).map((key, index) => (
@@ -53,7 +50,7 @@ export default async function Page({
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+      </Table>}
     </div>
   );
 }

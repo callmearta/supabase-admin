@@ -53,15 +53,7 @@ export const signInAction = async (formData: FormData) => {
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
-  const userInPublic = (
-    await supabase.from("users").select("*").eq("id", `${data.user.id}`)
-  ).data;
-  if (!userInPublic?.length) {
-    await supabase.auth.signOut();
-    return encodedRedirect("error", "/sign-in", "Invalid login credentials");
-  }
-  const userRole = userInPublic[0].role;
-  const isAdmin = userRole == "admin";
+  const isAdmin = typeof SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback == 'function' ? SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback(data.user, supabase) : false;
   if (!isAdmin) {
     await supabase.auth.signOut();
     return encodedRedirect("error", "/sign-in", "Invalid login credentials");
@@ -226,19 +218,19 @@ async function savePivotDataToSupabase({
     copyFormData.delete(key);
   });
   const result = await supabase.from(tableName).upsert(Object.fromEntries(copyFormData)).select();
-  
+
   if (!result.data) {
     throw new Error("Failed to insert into Supabase");
   }
   pivotFieldNames.forEach(async key => {
     const pivotObject = pivotFields[key];
     let fileUrl;
-    
+
     if (pivotObject.type == OverrideType.UploadMultiple || pivotObject.type == OverrideType.UploadSingle) {
       if (!pivotObject.bucketName) return;
-    
+
       fileUrl = await supabase.storage.from(pivotObject.bucketName).upload("" + Math.floor(Date.now() / 1000) + (formData.get(key) as File).name.replace(/s/g, '-'), formData.get(key) as File);
-    
+
       if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
       const insertedFile = await supabase.from(pivotObject.storeIn.tableName).upsert({
         [pivotObject.storeIn.fieldName]: fileUrl.data?.fullPath
@@ -249,9 +241,9 @@ async function savePivotDataToSupabase({
         [pivotObject.pivotTable.foreignKeys.fillableColumn]: insertedFile.data[0].id,
         [pivotObject.pivotTable.foreignKeys.relationalColumn]: result.data[0].id
       });
-    
+
       if (pivotInsertResult.error) throw new Error("failed to insert into pivot table itself", pivotInsertResult.error);
-      return {error:null, data: null, status: 201, statusText: 'Created'};
+      return { error: null, data: null, status: 201, statusText: 'Created' };
     }
   });
   return result;

@@ -1,3 +1,5 @@
+import { SupabaseClient, User } from "@supabase/supabase-js";
+
 export enum OverrideType {
   UploadSingle = "uploadsingle",
   UploadMultiple = "uploadmultiple",
@@ -9,10 +11,14 @@ export enum OverrideType {
 }
 
 export type Config = {
+  auth?: {
+    isAdminCallback?: (user: User | null, supabase: SupabaseClient<any, "public", any>) => Promise<boolean>
+  },
   general: {
     panelTitle: string,
     panelSubtitle: string,
-    icon: any
+    icon: any,
+    itemsPerPage?: number
   },
   menu?: {
     [key: string]: {
