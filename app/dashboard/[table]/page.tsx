@@ -8,8 +8,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { OverrideType } from "@/types/supabase-admin";
+import { getTableViewColumnOverride, getTableViewColumnOverrideType, getTableViewOverrides, hasTableViewOverrides } from "@/utils/hasTableViewOverride";
+import { hasTableViewColumnOverride } from "@/utils/hasTableViewOverride";
 import { createClient } from "@/utils/supabase/server";
-import { InfoIcon, PlusIcon } from "lucide-react";
+import { EditIcon, PlusIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 export default async function Page({
@@ -19,7 +23,9 @@ export default async function Page({
 }) {
   const { table } = await params;
   const supabase = await createClient();
-  const { data, error, count } = await supabase.from(table).select("*");
+  const { data, error, count } = await supabase.from(table).select(hasTableViewOverrides(table) ?
+    getTableViewOverrides(table)?.map(v => typeof v === "string" ? v : v.columnName).join(',')
+    : "*");
   if (error) {
     return <p>{error.message}</p>;
   }
@@ -37,16 +43,26 @@ export default async function Page({
         <TableHeader>
           <TableRow>
             {Object.keys(data[0]).map((key, index) => (
-              <TableHead key={index + "-" + key}>{key}</TableHead>
+              <TableHead key={index + "-" + key}>{getTableViewColumnOverride(table, key)?.displayName || key}</TableHead>
             ))}
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((d, i) => (
-            <TableRow key={d.id || i}>
+          {data.map((d: any, i) => (
+            <TableRow key={i}>
               {Object.keys(d).map((key, index) => (
-                <TableCell key={index + "-" + key}>{d[key]}</TableCell>
+                <TableCell key={index + "-" + key}>
+                  {hasTableViewColumnOverride(table, key) && getTableViewColumnOverrideType(table, key) === OverrideType.UploadSingle && d[key] && d[key].length ?
+                    <Image alt="" src={d[key] || ''} width={48} height={48} className="rounded-full flex-none w-12 h-12" /> :
+                    d[key]}
+                </TableCell>
               ))}
+              <TableCell className="text-right">
+                <Link href={`/dashboard/${table}/${d.id}/edit`} className={cn(buttonVariants({ variant: "outline" }))}>
+                  <EditIcon size={14} />
+                </Link>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -20,6 +20,13 @@ export type Config = {
     icon: any,
     itemsPerPage?: number
   },
+  tableViewOverrides?: {
+    [tableName: string]: (string | {
+      columnName: string,
+      displayName?: string,
+      type?: OverrideType
+    })[]
+  },
   menu?: {
     [key: string]: {
       icon?: any;
@@ -39,7 +46,24 @@ export type Config = {
     [tableName: string]: {
       [fieldName: string]: PivotField
     }
+  },
+  relationalFields?: {
+    [tableName: string]: {
+      [fieldName: string]: RelationalField
+    }
   }
+};
+
+export type RelationalField = {
+  type: OverrideType,
+  nullable?: boolean,
+  relationalColumn: string,
+  fetchOptions?: (supabase: SupabaseClient<any, "public", any>) => Promise<any[]>,
+  storeIn?: {
+    bucketName?: string,
+    fieldName: string
+  },
+  store?: (supabase: SupabaseClient<any, "public", any>, insertResult: { id: string, [key: string]: any }, fieldValue: any) => Promise<any[]>
 };
 
 export type PivotField = {

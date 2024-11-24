@@ -52,7 +52,7 @@ export default function FileInput({
       setPreviews((prev) => [...prev, url]);
       if (disableAutoUpload) return;
       const result = await uploadFileToSupabase("uploads", file);
-      console.log(result);
+      
     });
     setIsLoading(false);
   };
@@ -72,6 +72,7 @@ export default function FileInput({
         {...rest}
         disabled={isLoading}
         type="file"
+        multiple={multiple}
         onChange={_handleChange}
         name={disableAutoUpload ? rest.name : undefined}
       />

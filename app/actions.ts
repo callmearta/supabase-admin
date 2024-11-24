@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { databaseClient } from "@/utils/supabase/database";
 import { Column } from "@/types/column";
 import { SUPABASE_ADMIN_CONFIG } from "@/supabase-admin.config";
-import { OverrideType, PivotField } from "@/types/supabase-admin";
+import { OverrideType, PivotField, RelationalField } from "@/types/supabase-admin";
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
@@ -184,10 +184,19 @@ export async function fetchColumnsForTable(tableName: string) {
 }
 
 export async function saveDataToSupabase(tableName: string, data: FormData) {
-  const pivotFields = SUPABASE_ADMIN_CONFIG.pivotFields ? SUPABASE_ADMIN_CONFIG.pivotFields[tableName] as { [key: string]: PivotField } : null;
-  if (pivotFields) {
-    const result = await savePivotDataToSupabase({
-      pivotFields,
+  // const pivotFields = SUPABASE_ADMIN_CONFIG.pivotFields ? SUPABASE_ADMIN_CONFIG.pivotFields[tableName] as { [key: string]: PivotField } : null;
+  const relationalFields = SUPABASE_ADMIN_CONFIG.relationalFields ? SUPABASE_ADMIN_CONFIG.relationalFields[tableName] as { [key: string]: RelationalField } : null;
+  // if (pivotFields) {
+  //   const result = await savePivotDataToSupabase({
+  //     pivotFields,
+  //     formData: data,
+  //     tableName,
+  //   })
+  //   return result;
+  // }
+  if (relationalFields) {
+    const result = await saveRelationalDataToSupabase({
+      relationalFields,
       formData: data,
       tableName,
     })
@@ -199,55 +208,120 @@ export async function saveDataToSupabase(tableName: string, data: FormData) {
   return result;
 }
 
-async function savePivotDataToSupabase({
-  pivotFields,
+async function saveRelationalDataToSupabase({
+  relationalFields,
   formData,
   tableName
 }: {
-  pivotFields: { [key: string]: PivotField },
+  relationalFields: { [key: string]: RelationalField },
   formData: FormData,
   tableName: string,
 }) {
   const supabase = await createClient();
-  const pivotFieldNames = Object.keys(pivotFields);
+  const relationalFieldNames = Object.keys(relationalFields);
   const copyFormData = new FormData();
   for (const [key, value] of Array.from(formData.entries())) {
+    if (!value.toString().length) continue;
     copyFormData.append(key, value);
   }
-  pivotFieldNames.forEach(async key => {
+  relationalFieldNames.forEach(async key => {
     copyFormData.delete(key);
   });
+  
   const result = await supabase.from(tableName).upsert(Object.fromEntries(copyFormData)).select();
 
   if (!result.data) {
-    throw new Error("Failed to insert into Supabase");
+    console.error("Failed to insert into Supabase");
+    return result;
   }
-  pivotFieldNames.forEach(async key => {
-    const pivotObject = pivotFields[key];
-    let fileUrl;
+  relationalFieldNames.forEach(async key => {
+    const relationalField = relationalFields[key];
+    const relationalFieldValue = formData.get(key);
+    if (!relationalFieldValue) return;
+    if (relationalField.store && typeof relationalField.store === 'function') {
+      const storeResult = await relationalField.store(supabase, result.data[0], relationalFieldValue);
+      if (!storeResult) throw new Error(`Failed to store relational field: ${key}`);
+      return;
+    }
+    if (relationalField.type == OverrideType.UploadSingle) {
+      if (!relationalField.storeIn?.bucketName) return;
 
-    if (pivotObject.type == OverrideType.UploadMultiple || pivotObject.type == OverrideType.UploadSingle) {
-      if (!pivotObject.bucketName) return;
-
-      fileUrl = await supabase.storage.from(pivotObject.bucketName).upload("" + Math.floor(Date.now() / 1000) + (formData.get(key) as File).name.replace(/s/g, '-'), formData.get(key) as File);
-
+      const fileUrl = await supabase.storage.from(relationalField.storeIn.bucketName).upload("" + Math.floor(Date.now() / 1000) + (relationalFieldValue as File).name.replace(/s/g, '-'), relationalFieldValue as File);
       if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
-      const insertedFile = await supabase.from(pivotObject.storeIn.tableName).upsert({
-        [pivotObject.storeIn.fieldName]: fileUrl.data?.fullPath
+      const insertedFilesResult = await supabase.from(key).upsert({
+        [relationalField.storeIn.fieldName]: fileUrl.data?.fullPath,
+        [relationalField.relationalColumn]: result.data[0].id
       }).select();
-      if (!insertedFile.data) throw new Error(`Failed to insert into pivot object table: storeIn ${pivotObject.storeIn.tableName}`);
+      if (!insertedFilesResult.data) throw new Error(`Failed to insert into pivot object table: storeIn ${key}`);
+    }
+    if (relationalField.type == OverrideType.UploadMultiple) {
+      const relationalFieldValues = formData.getAll(key);
+      if (!relationalFieldValues || !relationalFieldValues.length) return;
+      relationalFieldValues.forEach(async (value) => {
+        if (!relationalField.storeIn?.bucketName) return;
 
-      const pivotInsertResult = await supabase.from(pivotObject.pivotTable.tableName).insert({
-        [pivotObject.pivotTable.foreignKeys.fillableColumn]: insertedFile.data[0].id,
-        [pivotObject.pivotTable.foreignKeys.relationalColumn]: result.data[0].id
+        const fileUrl = await supabase.storage.from(relationalField.storeIn.bucketName).upload("" + Math.floor(Date.now() / 1000) + (value as File).name.replace(/s/g, '-'), value as File);
+        if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
+        const insertedFilesResult = await supabase.from(key).upsert({
+          [relationalField.storeIn.fieldName]: fileUrl.data?.fullPath,
+          [relationalField.relationalColumn]: result.data[0].id
+        }).select();
+        if (!insertedFilesResult.data) throw new Error(`Failed to insert into pivot object table: storeIn ${key}`);
       });
-
-      if (pivotInsertResult.error) throw new Error("failed to insert into pivot table itself", pivotInsertResult.error);
-      return { error: null, data: null, status: 201, statusText: 'Created' };
     }
   });
   return result;
 }
+
+// async function savePivotDataToSupabase({
+//   pivotFields,
+//   formData,
+//   tableName
+// }: {
+//   pivotFields: { [key: string]: PivotField },
+//   formData: FormData,
+//   tableName: string,
+// }) {
+//   const supabase = await createClient();
+//   const pivotFieldNames = Object.keys(pivotFields);
+//   const copyFormData = new FormData();
+//   for (const [key, value] of Array.from(formData.entries())) {
+//     copyFormData.append(key, value);
+//   }
+//   pivotFieldNames.forEach(async key => {
+//     copyFormData.delete(key);
+//   });
+//   const result = await supabase.from(tableName).upsert(Object.fromEntries(copyFormData)).select();
+
+//   if (!result.data) {
+//     throw new Error("Failed to insert into Supabase");
+//   }
+//   pivotFieldNames.forEach(async key => {
+//     const pivotObject = pivotFields[key];
+//     let fileUrl;
+
+//     if (pivotObject.type == OverrideType.UploadMultiple || pivotObject.type == OverrideType.UploadSingle) {
+//       if (!pivotObject.bucketName) return;
+
+//       fileUrl = await supabase.storage.from(pivotObject.bucketName).upload("" + Math.floor(Date.now() / 1000) + (formData.get(key) as File).name.replace(/s/g, '-'), formData.get(key) as File);
+
+//       if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
+//       const insertedFile = await supabase.from(pivotObject.storeIn.tableName).upsert({
+//         [pivotObject.storeIn.fieldName]: fileUrl.data?.fullPath
+//       }).select();
+//       if (!insertedFile.data) throw new Error(`Failed to insert into pivot object table: storeIn ${pivotObject.storeIn.tableName}`);
+
+//       const pivotInsertResult = await supabase.from(pivotObject.pivotTable.tableName).insert({
+//         [pivotObject.pivotTable.foreignKeys.fillableColumn]: insertedFile.data[0].id,
+//         [pivotObject.pivotTable.foreignKeys.relationalColumn]: result.data[0].id
+//       });
+
+//       if (pivotInsertResult.error) throw new Error("failed to insert into pivot table itself", pivotInsertResult.error);
+//       return { error: null, data: null, status: 201, statusText: 'Created' };
+//     }
+//   });
+//   return result;
+// }
 
 export async function uploadFileToSupabase(bucketId: string, file: File) {
   const supabase = await createClient();
