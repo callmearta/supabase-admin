@@ -9,8 +9,8 @@ import { useRef, useState } from "react";
 import { format } from "date-fns";
 import { Column } from "@/types/column";
 
-export default function DatePicker({ column, name, required }: { column?: Column, name?: string, required?: boolean }) {
-  const [date, setDate] = useState<Date>();
+export default function DatePicker({ column, name, required, defaultValue }: { column?: Column, name?: string, required?: boolean, defaultValue?: string }) {
+  const [date, setDate] = useState<Date>(defaultValue ? new Date(defaultValue) : new Date());
   const hiddenRef = useRef<HTMLInputElement>(null);
   const _handleSelect = (date?: Date) => {
     if (!hiddenRef.current || !date) return;
