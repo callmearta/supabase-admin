@@ -10,31 +10,32 @@ import { SUPABASE_ADMIN_CONFIG } from "@/supabase-admin.config";
 import { OverrideType, RelationalField } from "@/types/supabase-admin";
 import SelectMultiple from "./select";
 
-export default function RelationalFields({ table }: { table: string }) {
-    const fieldRenderer = (fieldName: string, field: (RelationalField)) => {
+export default function RelationalFields({ table, data }: { table: string, data: any }) {
+    console.log(data);
+    const fieldRenderer = (fieldName: string, field: (RelationalField & { defaultValue: any })) => {
         const type = field.type;
 
         switch (type) {
             case OverrideType.Text:
-                return <Input type="text" name={fieldName} />;
+                return <Input type="text" name={fieldName} defaultValue={field.defaultValue} />;
                 break;
             case OverrideType.RichText:
-                return <RichTextArea name={fieldName} />;
+                return <RichTextArea name={fieldName} defaultValue={field.defaultValue} />;
                 break;
             case OverrideType.Date:
-                return <DatePicker name={fieldName} />;
+                return <DatePicker name={fieldName} defaultValue={field.defaultValue} />;
                 break;
             case OverrideType.UploadSingle:
                 return <FileInput disableAutoUpload name={fieldName} accept="image/*" />;
                 break;
             case OverrideType.UploadMultiple:
-                return <FileInput disableAutoUpload multiple={true} name={fieldName} accept="image/*" />;
+                return <FileInput disableAutoUpload multiple={true} name={fieldName} accept="image/*" defaultValue={field.defaultValue} />;
                 break;
             case OverrideType.Number:
-                return <Input name={fieldName} type="number" />;
+                return <Input name={fieldName} type="number" defaultValue={field.defaultValue} />;
                 break;
             case OverrideType.Select:
-                return <SelectMultiple name={fieldName} fetchOptions={field.fetchOptions!} />;
+                return <SelectMultiple table={table} name={fieldName} fetchOptions={field.fetchOptions!} defaultValue={field.defaultValue} />;
                 break;
             default:
                 return null;
@@ -53,7 +54,7 @@ export default function RelationalFields({ table }: { table: string }) {
                     ""
                 )}
             </Label>
-            {fieldRenderer(key, field)}
+            {fieldRenderer(key, { ...field, defaultValue: data[key] })}
         </div>
     })
 

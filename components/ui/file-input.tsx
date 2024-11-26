@@ -4,6 +4,11 @@ import { ChangeEvent, HTMLAttributes, useRef, useState } from "react";
 import { Input } from "./input";
 import { createClient } from "@/utils/supabase/client";
 import { uploadFileToSupabase } from "@/app/actions";
+import { getStoreInFieldName } from "@/utils/getStoreInFieldName";
+import { useParams } from "next/navigation";
+import { XIcon } from "lucide-react";
+import { getRelationalColumn } from "@/utils/hasTableViewOverride";
+import UploadedFile from "./uploaded-file";
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> { }
@@ -12,11 +17,13 @@ export default function FileInput({
   onChange,
   multiple,
   disableAutoUpload,
+  defaultValue,
   ...rest
 }: InputProps & {
   onChange?: (files: File[]) => void;
   disableAutoUpload?: boolean
 }) {
+  const { table, id } = useParams();
   const hiddenRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,7 +59,7 @@ export default function FileInput({
       setPreviews((prev) => [...prev, url]);
       if (disableAutoUpload) return;
       const result = await uploadFileToSupabase("uploads", file);
-      
+
     });
     setIsLoading(false);
   };
@@ -67,6 +74,13 @@ export default function FileInput({
             <img src={preview} className="w-full h-full object-cover" />
           </div>
         ))}
+      </div>}
+      {!!defaultValue && <div className="w-full flex gap-2 flex-wrap border mb-4 p-4 rounded-2xl">
+        {Array.isArray(defaultValue) ? defaultValue.map((preview) => (
+          <UploadedFile file={preview} table={table as string} id={id as string} key={preview[getStoreInFieldName(table as string, rest.name!) as keyof typeof preview]} name={rest.name as string} />
+        )) :
+          <UploadedFile file={defaultValue} table={table as string} id={id as string} name={rest.name as string} />
+        }
       </div>}
       <Input
         {...rest}

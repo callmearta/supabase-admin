@@ -184,16 +184,8 @@ export async function fetchColumnsForTable(tableName: string) {
 }
 
 export async function saveDataToSupabase(tableName: string, data: FormData) {
-  // const pivotFields = SUPABASE_ADMIN_CONFIG.pivotFields ? SUPABASE_ADMIN_CONFIG.pivotFields[tableName] as { [key: string]: PivotField } : null;
   const relationalFields = SUPABASE_ADMIN_CONFIG.relationalFields ? SUPABASE_ADMIN_CONFIG.relationalFields[tableName] as { [key: string]: RelationalField } : null;
-  // if (pivotFields) {
-  //   const result = await savePivotDataToSupabase({
-  //     pivotFields,
-  //     formData: data,
-  //     tableName,
-  //   })
-  //   return result;
-  // }
+
   if (relationalFields) {
     const result = await saveRelationalDataToSupabase({
       relationalFields,
@@ -297,5 +289,20 @@ export async function fetchRelationalDataFromSupabase(tableName: string, id: str
     const result = await supabase.from(key).select().eq(relationalField.relationalColumn, id);
     return result.data;
   }));
-  return Object.fromEntries(relationalFieldNames.map((key, index) => [key, results[index] ? results[index][0] : null]));
+
+  return Object.fromEntries(relationalFieldNames.map((key, index) => [key, results[index] ? results[index] : null]));
+}
+
+export async function updateDataInSupabase(tableName: string, formData: FormData, id: string, relationalData: any, initialFormData: FormData | null) {
+  const supabase = await createClient();
+  const copyFormData = new FormData();
+  for (const [key, value] of Array.from(formData.entries())) {
+    console.log(key, value);
+    if (!value.toString().length) continue;
+    if (key in relationalData || key == 'id') continue;
+    copyFormData.append(key, value);
+  }
+  const result = await supabase.from(tableName).update(Object.fromEntries(copyFormData)).eq('id', id).select();
+  if (!result.data) return result;
+  return result;
 }

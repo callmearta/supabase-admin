@@ -29,3 +29,16 @@ export const getTableViewColumnOverrideType = (table: string, columnName: string
     if (!hasTableViewColumnObjectOverride(table, columnName)) return null;
     return (getTableViewColumnOverride(table, columnName) as { type: OverrideType })?.type;
 }
+
+export const getRelationalColumn = (table: string, columnName: string) => {
+    const hasOverride = SUPABASE_ADMIN_CONFIG.relationalFields && SUPABASE_ADMIN_CONFIG.relationalFields[table] && SUPABASE_ADMIN_CONFIG.relationalFields[table][columnName];
+    if (!hasOverride) return null;
+    return hasOverride.relationalColumn;
+}
+
+export const getRelationalStoreColumn = (table: string, columnName: string) => {
+    const hasOverride = SUPABASE_ADMIN_CONFIG.relationalFields && SUPABASE_ADMIN_CONFIG.relationalFields[table] && SUPABASE_ADMIN_CONFIG.relationalFields[table][columnName];
+    if (!hasOverride) return null;
+    return hasOverride.storeColumn;
+}
+

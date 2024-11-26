@@ -58,6 +58,7 @@ export type RelationalField = {
   type: OverrideType,
   nullable?: boolean,
   relationalColumn: string,
+  storeColumn?: string,
   fetchOptions?: (supabase: SupabaseClient<any, "public", any>) => Promise<any[]>,
   storeIn?: {
     bucketName?: string,

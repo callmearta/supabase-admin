@@ -25,10 +25,10 @@ export default async function Page(props: {
     return (
         <div className="w-full">
             <h1 className="font-bold text-2xl capitalize">Create {table}</h1>
-            <Form table={table}>
+            <Form relationalData={relationalData} table={table} id={id}>
                 <Columns data={data[0]} table={table} columns={sortedColumns} />
-                <Pivots table={table} />
-                <RelationalFields table={table} />
+                {/* <Pivots table={table} /> */}
+                <RelationalFields data={relationalData} table={table} />
             </Form>
         </div>
     );
