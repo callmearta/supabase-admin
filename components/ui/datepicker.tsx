@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, XIcon } from "lucide-react";
 import { Button } from "./button";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { Column } from "@/types/column";
 
 export default function DatePicker({ column, name, required, defaultValue }: { column?: Column, name?: string, required?: boolean, defaultValue?: string }) {
-  const [date, setDate] = useState<Date>(defaultValue ? new Date(defaultValue) : new Date());
+  const [date, setDate] = useState<Date | 'null'>(defaultValue ? new Date(defaultValue) : 'null');
   const hiddenRef = useRef<HTMLInputElement>(null);
   const _handleSelect = (date?: Date) => {
     if (!hiddenRef.current || !date) return;
@@ -25,29 +25,36 @@ export default function DatePicker({ column, name, required, defaultValue }: { c
         name={name ? name : column?.column_name}
         ref={hiddenRef}
         disabled={!date}
+        value={date == 'null' ? 'null' : date?.toISOString()}
       />
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant={"outline"}
-            className={cn(
-              "w-[280px] justify-start text-left font-normal",
-              !date && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : <span>Pick a date</span>}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={_handleSelect}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
+      <div className="flex gap-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-[280px] justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date == 'null' ? <span>Pick a date</span> : format(date, "PPP")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date == 'null' ? new Date() : date}
+              onSelect={_handleSelect}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+        {date != 'null' && <Button type="button" variant={"outline"} className="w-fit" onClick={() => setDate('null')}>
+          <XIcon className="mr-2 h-4 w-4" />
+          Clear
+        </Button>}
+      </div>
     </>
   );
 }

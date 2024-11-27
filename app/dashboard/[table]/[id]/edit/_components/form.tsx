@@ -25,11 +25,10 @@ export default function Form({
     //formData.values().forEach((v) => console.log(v));
 
     const result = await updateDataInSupabase(table, formData, id, relationalData, initialFormData);
-
     if (result.error) {
       toast({ title: result.error.message });
     }
-    if (result.status == 201) {
+    if (result.status == 200) {
       toast({
         title: "Saved successfully",
         description: "Your data has been saved successfully.",

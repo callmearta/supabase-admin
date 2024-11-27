@@ -265,11 +265,12 @@ async function saveRelationalDataToSupabase({
   return result;
 }
 
-export async function uploadFileToSupabase(bucketId: string, file: File) {
+export async function uploadFileToSupabase(bucketId: string, file: File, fileName?: string) {
   const supabase = await createClient();
+  const unixTimestamp = Math.floor(Date.now() / 1000);
   const result = await supabase.storage
     .from(bucketId)
-    .upload(file.name.replace(/s/g, '-'), file);
+    .upload(fileName ? fileName : `${unixTimestamp}-${file.name.replace(/s/g, '-')}`, file);
   return result;
 }
 
@@ -297,12 +298,15 @@ export async function updateDataInSupabase(tableName: string, formData: FormData
   const supabase = await createClient();
   const copyFormData = new FormData();
   for (const [key, value] of Array.from(formData.entries())) {
-    console.log(key, value);
     if (!value.toString().length) continue;
     if (key in relationalData || key == 'id') continue;
     copyFormData.append(key, value);
   }
-  const result = await supabase.from(tableName).update(Object.fromEntries(copyFormData)).eq('id', id).select();
-  if (!result.data) return result;
+  const objectToUpdate: { [x: string]: any } = Object.fromEntries(copyFormData);
+  Object.keys(objectToUpdate).forEach(key => {
+    if (objectToUpdate[key] == 'null') objectToUpdate[key] = null;
+  });
+  const result = await supabase.from(tableName).update(objectToUpdate).eq('id', id).select();
+
   return result;
 }

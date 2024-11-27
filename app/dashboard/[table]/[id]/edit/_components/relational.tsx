@@ -1,6 +1,6 @@
 "use client"
 import DatePicker from "@/components/ui/datepicker";
-import FileInput from "@/components/ui/file-input";
+import FileInput from "./file-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import MultiSelect from "@/components/ui/multiselect";
@@ -11,7 +11,6 @@ import { OverrideType, RelationalField } from "@/types/supabase-admin";
 import SelectMultiple from "./select";
 
 export default function RelationalFields({ table, data }: { table: string, data: any }) {
-    console.log(data);
     const fieldRenderer = (fieldName: string, field: (RelationalField & { defaultValue: any })) => {
         const type = field.type;
 

@@ -39,6 +39,7 @@ export type Config = {
     [tableName: string]: {
       [columnName: string]: {
         type: OverrideType;
+        bucketName?: string;
       };
     };
   };

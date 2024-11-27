@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { OverrideType } from "@/types/supabase-admin";
+import getFileUrl from "@/utils/getFilUrl";
 import { getTableViewColumnOverride, getTableViewColumnOverrideType, getTableViewOverrides, hasTableViewOverrides } from "@/utils/hasTableViewOverride";
 import { hasTableViewColumnOverride } from "@/utils/hasTableViewOverride";
 import { createClient } from "@/utils/supabase/server";
@@ -54,7 +55,7 @@ export default async function Page({
               {Object.keys(d).map((key, index) => (
                 <TableCell key={index + "-" + key}>
                   {hasTableViewColumnOverride(table, key) && getTableViewColumnOverrideType(table, key) === OverrideType.UploadSingle && d[key] && d[key].length ?
-                    <Image alt="" src={d[key] || ''} width={48} height={48} className="rounded-full flex-none w-12 h-12" /> :
+                    <Image alt="" src={getFileUrl(d[key])} width={48} height={48} className="rounded-full flex-none w-12 h-12 object-cover" /> :
                     d[key]}
                 </TableCell>
               ))}
