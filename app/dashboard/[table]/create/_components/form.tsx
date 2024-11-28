@@ -5,16 +5,15 @@ import { toast } from "@hooks/use-toast";
 import { CheckIcon, RotateCwIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEventHandler, PropsWithChildren, useRef, useState } from "react";
+import { FormProvider, useFormContext } from "./context";
 
-export default function Form({
-  table,
-  children,
-}: PropsWithChildren<{ table: string }>) {
+const Form = ({ children, table }: PropsWithChildren<{ table: string }>) => {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement | null>(null);
+  const { form, setForm } = useFormContext();
   const [isLoading, setIsLoading] = useState(false);
   const _handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
-    if (!formRef.current) return;
+    if (!formRef.current || form.disabled) return;
     e.preventDefault();
     setIsLoading(true);
     const formData = new FormData(formRef.current);
@@ -33,24 +32,35 @@ export default function Form({
       router.push(`/dashboard/${table}`);
     }
   };
+  return <form ref={formRef} onSubmit={_handleSubmit} encType="multipart/form-data">
+    {children}
+    <div className="flex justify-end mt-16 pt-4 border-t border-t-border">
+      <Button disabled={form.disabled || isLoading} variant={"default"}>
+        {isLoading ? (
+          <>
+            <RotateCwIcon size={14} className="mr-2 animate-spin" />
+            Saving...
+          </>
+        ) : (
+          <>
+            <CheckIcon size={14} className="mr-2" />
+            Save
+          </>
+        )}
+      </Button>
+    </div>
+  </form>
+}
+
+export default function FormWrapper({
+  table,
+  children,
+}: PropsWithChildren<{ table: string }>) {
+
   return (
-    <form ref={formRef} onSubmit={_handleSubmit} encType="multipart/form-data">
-      {children}
-      <div className="flex justify-end mt-16 pt-4 border-t border-t-border">
-        <Button disabled={isLoading} variant={"default"}>
-          {isLoading ? (
-            <>
-              <RotateCwIcon size={14} className="mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <CheckIcon size={14} className="mr-2" />
-              Save
-            </>
-          )}
-        </Button>
-      </div>
-    </form>
+    <FormProvider>
+      <Form table={table}>{children}</Form>
+    </FormProvider>
   );
 }
+

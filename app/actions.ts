@@ -220,7 +220,12 @@ async function saveRelationalDataToSupabase({
     copyFormData.delete(key);
   });
 
-  const result = await supabase.from(tableName).upsert(Object.fromEntries(copyFormData)).select();
+  const objectToInsert: { [key: string]: any } = Object.fromEntries(copyFormData);
+  Object.keys(objectToInsert).forEach(key => {
+    if (objectToInsert[key] == 'null') objectToInsert[key] = null;
+  });
+
+  const result = await supabase.from(tableName).upsert(objectToInsert).select();
 
   if (!result.data) {
     console.error("Failed to insert into Supabase");

@@ -1,4 +1,4 @@
-import DatePicker from "@/components/ui/datepicker";
+import DatePicker from "./datepicker";
 import FileInput from "./file-input";
 import { Input } from "@/components/ui/input";
 import RichTextArea from "@/components/ui/richtextarea";
