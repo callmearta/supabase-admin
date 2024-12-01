@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
 
-export default async function ForgotPassword(props: { searchParams: Message }) {
+export default async function ForgotPassword(props: { searchParams: Promise<any> }) {
   const searchParams = await props.searchParams;
   return (
     <>

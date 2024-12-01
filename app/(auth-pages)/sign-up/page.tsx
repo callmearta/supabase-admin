@@ -7,7 +7,7 @@ import Link from "next/link";
 import { SmtpMessage } from "../smtp-message";
 import { use } from "react";
 
-export default function Signup(props: { searchParams: Promise<Message> }) {
+export default function Signup(props: { searchParams: Promise<any> }) {
   const searchParams = use(props.searchParams);
   if ("message" in searchParams) {
     return (
