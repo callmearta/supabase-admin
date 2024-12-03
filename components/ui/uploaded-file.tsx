@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Toast } from "./toast";
 import isRelational from "@/utils/isRelational";
 
-export default function UploadedFile({ file, table, id, name }: { file: any, table: string, id: string, name: string }) {
+export default function UploadedFile({ file, table, id, name, imageUrl }: { file: any, table: string, id: string, name: string, imageUrl: string }) {
     const isRelationalField = isRelational(table, name);
     const [isRemoved, setIsRemoved] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -15,7 +15,7 @@ export default function UploadedFile({ file, table, id, name }: { file: any, tab
         setLoading(true);
         const supabase = createClient();
         if (isRelationalField) {
-            const result = await supabase.from(name).delete().eq(getStoreInFieldName(table as string, name) as string, file).eq(getRelationalColumn(table as string, name) as string, id).select();
+            const result = await supabase.from(name).delete().eq(getStoreInFieldName(table as string, name) as string, file).eq(getRelationalColumn(table as string, name) as string, id);
             if (result.error) {
                 Toast({ title: result.error.message || 'Please try again later', type: 'foreground' });
                 return;
@@ -41,6 +41,6 @@ export default function UploadedFile({ file, table, id, name }: { file: any, tab
         <span className="absolute top-2 right-2 bg-white rounded-full flex items-center justify-center cursor-pointer" onClick={_handleRemove}>
             <XIcon size={20} />
         </span>
-        <img src={file} className="w-full h-full object-cover" />
+        <img src={imageUrl.includes('http') ? imageUrl : process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public/' + imageUrl} className="w-full h-full object-cover" />
     </div>
 }

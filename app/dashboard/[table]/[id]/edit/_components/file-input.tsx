@@ -69,7 +69,7 @@ export default function FileInput({
             });
             if (!relationalResult.error) {
                 toast({ title: 'File uploaded successfully', type: 'foreground' });
-                setDefaultValueFiles((prev) => [...(prev as string[]), result.data]);
+                setDefaultValueFiles((prev) => [...(prev as string[]), {[getStoreInFieldName(table as string, rest.name!) as string]:result.data?.fullPath}]);
                 setPreviews([]);
             } else {
                 toast({ title: relationalResult.error.message, type: 'foreground' });
@@ -100,7 +100,7 @@ export default function FileInput({
                 return;
             } else {
                 toast({ title: 'File uploaded successfully', type: 'foreground' });
-                setDefaultValueFiles((prev) => [...(prev as string[]), result.data]);
+                setDefaultValueFiles((prev) => [...(prev as string[]), {[getStoreInFieldName(table as string, rest.name!) as string]:result.data?.fullPath}]);
                 setPreviews((prev) => prev.filter((preview) => preview != url));
             }
         });
@@ -111,9 +111,22 @@ export default function FileInput({
             <div className={cn("w-full flex gap-2 flex-wrap border mb-4 p-4 rounded-2xl", { "opacity-50": isLoading })}>
                 {!!defaultValueFiles &&
                     Array.isArray(defaultValueFiles) ? defaultValueFiles.map((preview) => (
-                        <UploadedFile file={preview[getStoreInFieldName(table as string, rest.name!) as string].includes('http') ? preview[getStoreInFieldName(table as string, rest.name!) as string] : process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public/' + preview[getStoreInFieldName(table as string, rest.name!) as string]} table={table as string} id={id as string} key={preview[getStoreInFieldName(table as string, rest.name!) as keyof typeof preview]} name={rest.name as string} />
+                        <UploadedFile
+                            file={preview[getStoreInFieldName(table as string, rest.name!) as string]}
+                            imageUrl={preview[getStoreInFieldName(table as string, rest.name!) as string]}
+                            table={table as string}
+                            id={id as string}
+                            key={preview[getStoreInFieldName(table as string, rest.name!) as keyof typeof preview]}
+                            name={rest.name as string}
+                        />
                     )) :
-                    <UploadedFile file={defaultValueFiles?.includes('http') ? defaultValueFiles : process.env.NEXT_PUBLIC_SUPABASE_URL + '/storage/v1/object/public/' + defaultValueFiles} table={table as string} id={id as string} name={rest.name as string} />
+                    <UploadedFile
+                        file={defaultValueFiles}
+                        imageUrl={defaultValueFiles || ''}
+                        table={table as string}
+                        id={id as string}
+                        name={rest.name as string}
+                    />
 
                 }
                 {!!previews.length &&
