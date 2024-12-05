@@ -3,6 +3,8 @@ import Form from "./_components/form";
 import Pivots from "./_components/pivots";
 import Columns from "./_components/columns";
 import RelationalFields from "./_components/relational";
+import { Button } from "@/components/ui/button";
+import Delete from "./_components/delete";
 
 export default async function Page(props: {
     params: Promise<{ table: string, id: string }>;
@@ -24,7 +26,10 @@ export default async function Page(props: {
 
     return (
         <div className="w-full">
-            <h1 className="font-bold text-2xl capitalize">Create {table}</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="font-bold text-2xl capitalize">Create {table}</h1>
+                <Delete table={table} id={id} />
+            </div>
             <Form relationalData={relationalData} table={table} id={id}>
                 <Columns data={data[0]} table={table} columns={sortedColumns} />
                 {/* <Pivots table={table} /> */}

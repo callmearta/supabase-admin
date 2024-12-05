@@ -304,7 +304,7 @@ export async function updateDataInSupabase(tableName: string, formData: FormData
   const copyFormData = new FormData();
   for (const [key, value] of Array.from(formData.entries())) {
     if (!value.toString().length) continue;
-    if (key in relationalData || key == 'id') continue;
+    if (relationalData && key in relationalData || key == 'id') continue;
     copyFormData.append(key, value);
   }
   const objectToUpdate: { [x: string]: any } = Object.fromEntries(copyFormData);

@@ -52,11 +52,13 @@ export default function FileInput({
         setIsLoading(true);
         const bucketName = getBucketName(table as string, rest.name as string) as string;
         const result = await uploadFileToSupabase(bucketName, newFile);
+        
         if (result.data) {
             if (hiddenRef.current) hiddenRef.current.remove();
             const updateResult = await supabase.from(table as string).update({
                 [rest.name as string]: result.data?.fullPath
             }).eq('id', id);
+        
             if (updateResult.error) {
                 toast({ title: updateResult.error.message, type: 'foreground' });
             }
