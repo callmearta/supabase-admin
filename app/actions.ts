@@ -243,7 +243,7 @@ async function saveRelationalDataToSupabase({
     if (relationalField.type == OverrideType.UploadSingle) {
       if (!relationalField.storeIn?.bucketName) return;
 
-      const fileUrl = await supabase.storage.from(relationalField.storeIn.bucketName).upload("" + Math.floor(Date.now() / 1000) + (relationalFieldValue as File).name.replace(/s/g, '-'), relationalFieldValue as File);
+      const fileUrl = await supabase.storage.from(relationalField.storeIn.bucketName).upload("" + Math.floor(Date.now() / 1000) + (relationalFieldValue as File).name.replaceAll(' ', '-'), relationalFieldValue as File);
       if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
       const insertedFilesResult = await supabase.from(key).upsert({
         [relationalField.storeIn.fieldName]: fileUrl.data?.fullPath,
@@ -257,7 +257,7 @@ async function saveRelationalDataToSupabase({
       relationalFieldValues.forEach(async (value) => {
         if (!relationalField.storeIn?.bucketName) return;
 
-        const fileUrl = await supabase.storage.from(relationalField.storeIn.bucketName).upload("" + Math.floor(Date.now() / 1000) + (value as File).name.replace(/s/g, '-'), value as File);
+        const fileUrl = await supabase.storage.from(relationalField.storeIn.bucketName).upload("" + Math.floor(Date.now() / 1000) + (value as File).name.replaceAll(' ', '-'), value as File);
         if (!fileUrl.data) throw new Error("File upload to Supabase failed.");
         const insertedFilesResult = await supabase.from(key).upsert({
           [relationalField.storeIn.fieldName]: fileUrl.data?.fullPath,
@@ -275,7 +275,7 @@ export async function uploadFileToSupabase(bucketId: string, file: File, fileNam
   const unixTimestamp = Math.floor(Date.now() / 1000);
   const result = await supabase.storage
     .from(bucketId)
-    .upload(fileName ? fileName : `${unixTimestamp}-${file.name.replace(/s/g, '-')}`, file);
+    .upload(fileName ? fileName : `${unixTimestamp}-${file.name.replaceAll(' ', '-')}`, file);
   return result;
 }
 
