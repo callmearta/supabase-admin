@@ -38,19 +38,18 @@ export const updateSession = async (request: NextRequest) => {
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
-    
-    const hasAccess = typeof SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback == 'function' ? SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback(user.data.user, supabase) : false;
+    const {data:{user}} = await supabase.auth.getUser();
+    const hasAccess = typeof SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback == 'function' ? SUPABASE_ADMIN_CONFIG.auth?.isAdminCallback(user, supabase) : false;
     if(!user || (!hasAccess && user)){
       await supabase.auth.signOut();
     }
 
     // protected routes
-    if (request.nextUrl.pathname.startsWith("/dashboard") && !hasAccess) {
+    if (request.nextUrl.pathname.includes("/dashboard") && !hasAccess || (request.nextUrl.pathname.includes("/dashboard") && !user)) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
-    if (request.nextUrl.pathname === "/" && !hasAccess) {
+    if (request.nextUrl.pathname === "/" && hasAccess) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
